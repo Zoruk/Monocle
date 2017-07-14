@@ -122,20 +122,23 @@ function getPopupContent (item) {
 }
 
 function getRaidPopupContent (raw) {
-	var content = '<b>Raid level ' + raw.level + '</b><br>';
-	var info_link = (raw.pokemon_id === 0) ? '' : ' - <a href="https://pokemongo.gamepress.gg/pokemon/' + raw.pokemon_id + '">#' + raw.pokemon_id + '</a>';
-	content += 'Pokemon: ' + raw.pokemon_name + info_link + '<br>';
-	if (raw.pokemon_id === 0){
-		var diff = (raw.time_battle - new Date().getTime() / 1000);
-		var minutes = parseInt(diff / 60);
-    	var seconds = parseInt(diff - (minutes * 60));
-		content += 'Raid Battle: ' + minutes + 'm ' + seconds + 's<br>';
-	}else{
-		var diff = (raw.time_end - new Date().getTime() / 1000);
-		var minutes = parseInt(diff / 60);
-    	var seconds = parseInt(diff - (minutes * 60));
-		content += 'Raid End: ' + minutes + 'm ' + seconds + 's<br>';
-	}
+    var content = '<b>Raid level ' + raw.level + '</b><br>';
+    if (raw.pokemon_id === 0){
+        var diff = (raw.time_battle - new Date().getTime() / 1000);
+        var minutes = parseInt(diff / 60);
+        var seconds = parseInt(diff - (minutes * 60));
+        content += 'Raid Battle: ' + minutes + 'm ' + seconds + 's<br>';
+    }else{
+        var info_link = (raw.pokemon_id === 0) ? '' : ' - <a href="https://pokemongo.gamepress.gg/pokemon/' + raw.pokemon_id + '">#' + raw.pokemon_id + '</a>';
+        content += 'Pokemon: ' + raw.pokemon_name + info_link + '<br>';
+        content += 'CP: ' + raw.cp + '<br>';
+        content += 'Move 1: ' + raw.move_1 + '<br>';
+        content += 'Move 2: ' + raw.move_2 + '<br>';
+        var diff = (raw.time_end - new Date().getTime() / 1000);
+        var minutes = parseInt(diff / 60);
+        var seconds = parseInt(diff - (minutes * 60));
+        content += 'Raid End: ' + minutes + 'm ' + seconds + 's<br>';
+    }
     content += '<br>=&gt; <a href="https://www.google.com/maps/?daddr='+ raw.lat + ','+ raw.lon +'" target="_blank" title="See in Google Maps">Get directions</a>';
     return content;
 }
@@ -241,16 +244,16 @@ function RaidMarker (raw) {
     else if (raw.level === 3 || raw.level === 4) {
         rarity = 'rare';
     }
-	var icon = null;
-	if (raw.pokemon_id === 0){
-		icon = new RaidIcon({iconUrl: '/static/monocle-icons/raids/' + rarity + '.png', level: raw.level, expires_at: raw.time_battle});
-	}else{
-		icon = new RaidIcon({iconUrl: '/static/monocle-icons/icons/' + raw.pokemon_id + '.png', level: raw.level, expires_at: raw.time_end});
-	}
+    var icon = null;
+    if (raw.pokemon_id === 0){
+        icon = new RaidIcon({iconUrl: '/static/monocle-icons/raids/' + rarity + '.png', level: raw.level, expires_at: raw.time_battle});
+    }else{
+        icon = new RaidIcon({iconUrl: '/static/monocle-icons/icons/' + raw.pokemon_id + '.png', level: raw.level, expires_at: raw.time_end});
+    }
 
     var marker = L.marker([raw.lat, raw.lon], {icon: icon});
-	marker.raw = raw;
-	marker.opacityInterval = setInterval(function () {
+    marker.raw = raw;
+    marker.opacityInterval = setInterval(function () {
         if (overlays.Raids.hidden) {
             return;
         }
@@ -269,9 +272,9 @@ function RaidMarker (raw) {
         marker.overlay = 'Hidden';
     }
 
-	markers[raw.id] = marker;
+    markers[raw.id] = marker;
     
- 	marker.on('popupopen',function popupopen (event) {
+     marker.on('popupopen',function popupopen (event) {
         event.popup.options.autoPan = true; // Pan into view once
         event.popup.setContent(getRaidPopupContent(event.target.raw));
         event.target.popupInterval = setInterval(function () {
@@ -318,15 +321,15 @@ function addRaidsToMap (data, map) {
         // Already placed? No need to do anything, then
         if (item.id in markers) {
             if (item.pokemon_id == markers[item.id].raw.pokemon_id){
-				return;
-			}
-			markers[item.id].removeFrom(overlays.Raids);
+                return;
+            }
+            markers[item.id].removeFrom(overlays.Raids);
             clearInterval(markers[item.id].opacityInterval);
             markers[item.id] = undefined;
         }
         var marker = RaidMarker(item);
         
-		if (marker.overlay !== "Hidden"){
+        if (marker.overlay !== "Hidden"){
             marker.addTo(overlays[marker.overlay])
         }
     });
@@ -572,7 +575,7 @@ $('#settings').on('click', '.settings-panel button', function () {
         moveToLayer(id, value, 'filter');
     }else if (key.indexOf('raids-') > -1){
         // This is a raid's filter button
-        moveToLayer(id, value, 'raids');		
+        moveToLayer(id, value, 'raids');
     }else{
         setPreference(key, value);
     }
@@ -582,32 +585,32 @@ function moveToLayer(id, layer, type){
     setPreference(type+"-"+id, layer);
     layer = layer.toLowerCase();
     if (type === 'filter'){
-		for(var k in markers) {
-		    var m = markers[k];
-		    if ((k.indexOf("pokemon-") > -1) && (m !== undefined) && (m.raw.pokemon_id === id)){
-		        m.removeFrom(overlays[m.overlay]);
-		        if (layer === 'pokemon'){
-		            m.overlay = "Pokemon";
-		            m.addTo(overlays.Pokemon);
-		        }else if (layer === 'trash') {
-		            m.overlay = "Trash";
-		            m.addTo(overlays.Trash);
-		        }
-		    }
-		}
+        for(var k in markers) {
+            var m = markers[k];
+            if ((k.indexOf("pokemon-") > -1) && (m !== undefined) && (m.raw.pokemon_id === id)){
+                m.removeFrom(overlays[m.overlay]);
+                if (layer === 'pokemon'){
+                    m.overlay = "Pokemon";
+                    m.addTo(overlays.Pokemon);
+                }else if (layer === 'trash') {
+                    m.overlay = "Trash";
+                    m.addTo(overlays.Trash);
+                }
+            }
+        }
     }else if (type === 'raids'){
         for(var k in markers) {
-		    var m = markers[k];
-		    if ((k.indexOf("raid-") > -1) && (m !== undefined) && (m.raw.level === id)){
-		        m.removeFrom(overlays[m.overlay]);
-		        if (layer === 'show'){
-		            m.overlay = "Raids";
-		            m.addTo(overlays.Raids);
-		        }else{
-		            m.overlay = "Hidden";
+            var m = markers[k];
+            if ((k.indexOf("raid-") > -1) && (m !== undefined) && (m.raw.level === id)){
+                m.removeFrom(overlays[m.overlay]);
+                if (layer === 'show'){
+                    m.overlay = "Raids";
+                    m.addTo(overlays.Raids);
+                }else{
+                    m.overlay = "Hidden";
                 }
-		    }
-		}
+            }
+        }
     }
 }
 
