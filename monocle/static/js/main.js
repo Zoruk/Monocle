@@ -552,7 +552,7 @@ $('#reset_btn').on('click', function () {
 $('body').on('click', '.popup_filter_link', function () {
     var id = $(this).data("pokeid");
     var layer = $(this).data("newlayer").toLowerCase();
-    moveToLayer(id, layer);
+    moveToLayer(id, layer, 'pokemons');
     var item = $("#settings button[data-id='"+id+"']");
     item.removeClass("active").filter("[data-value='"+layer+"']").addClass("active");
 });
@@ -572,7 +572,7 @@ $('#settings').on('click', '.settings-panel button', function () {
 
     if (key.indexOf('filter-') > -1){
         // This is a pokemon's filter button
-        moveToLayer(id, value, 'filter');
+        moveToLayer(id, value, 'pokemons');
     }else if (key.indexOf('raids-') > -1){
         // This is a raid's filter button
         moveToLayer(id, value, 'raids');
@@ -584,7 +584,7 @@ $('#settings').on('click', '.settings-panel button', function () {
 function moveToLayer(id, layer, type){
     setPreference(type+"-"+id, layer);
     layer = layer.toLowerCase();
-    if (type === 'filter'){
+    if (type === 'pokemons'){
         for(var k in markers) {
             var m = markers[k];
             if ((k.indexOf("pokemon-") > -1) && (m !== undefined) && (m.raw.pokemon_id === id)){
